@@ -4,12 +4,9 @@ const base_url = CMP.base_url;
 const API = url => `${base_url}/wp-json${url}`;
 
 // Minimum required ACF fields
-const requiredAcfFields = CMP.acf_fields || {
-  profile_img: 'profile_img',
-  latitude:    'latitude',
-  longitude:   'longitude',
-  category:    'category',
-};
+const requiredAcfFields = CMP.requiredAcfFields ;
+
+console.log(requiredAcfFields);
 
 if (!requiredAcfFields || Object.keys(requiredAcfFields).length === 0) {
   console.error("Failed to get ACF fields");
