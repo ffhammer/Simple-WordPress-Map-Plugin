@@ -3,8 +3,8 @@
 
 // Keep your category definitions
 
-const base_url = "";
-// const base_url = "http://map.local; for local development set to your page
+const base_url = CMP.base_url;
+const API = url=> `${base_url}/wp-json${url}`;
 
 
 const category_to_color = {
@@ -19,7 +19,7 @@ const category_to_color = {
 async function fetch_image_url(media_id) {
   try {
     const response = await fetch(
-      `${base_url}/wp-json/wp/v2/media/${media_id}?_fields=source_url`
+      API(`/wp/v2/media/${media_id}?_fields=source_url`)
     );
 
     if (!response.ok) {
@@ -78,7 +78,7 @@ const filterMenu = document.getElementById('category-filters');
 const filterAllCheckbox = document.getElementById('filter-all');
 
 // Fetch data and create markers/layers
-fetch(`${base_url}/wp-json/wp/v2/producer?per_page=100`)
+fetch(API('/wp/v2/producer?per_page=100'))
   .then((res) => res.json())
   .then(async (data) => {
     const promises = data.map(async (item) => {
