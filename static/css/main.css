@@ -1,36 +1,41 @@
 body {
   margin: 0;
-  font-family: sans-serif;
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  background-color: #f9f9f9;
 }
 
 h1 {
-  margin: 16px;
+  margin: 1rem;
+  font-size: 1.5rem;
 }
 
 .container {
-    display: flex;
-    align-items: flex-start;
-    padding: 0 16px 16px 16px;
-    gap: 24px;
-  }
-  
-  #filter-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 14px;
-    padding-top: 8px;
-    min-width: 180px;
-  }
-  
-  #filter-controls input[type="checkbox"] {
-    margin-right: 6px;
-  }
-  
-  #map {
-    flex: 1;
-    height: 600px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-  }
-  
+  display: flex;
+  align-items: flex-start;
+  padding: 0 1rem 1rem 1rem;
+  gap: 1.5rem;
+}
+
+#filter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  padding-top: 0.5rem;
+  min-width: 12rem;
+}
+
+#filter-controls input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+#map {
+  flex: 1;
+  min-height: 60vh;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  background: #e6e6e6;
+}
