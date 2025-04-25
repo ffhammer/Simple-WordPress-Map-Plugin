@@ -1,18 +1,18 @@
 <?php
 /**
  * Plugin Name: Custom Map Plugin
- * Description: Embed Leaflet map via `[custom_map]` with editable categories/colors and custom CSS.
- * Version:     1.2.0
+ * Description: Embed Leaflet map via `[custom_map]` with editable categories/colors, custom CSS, and custom pin HTML.
+ * Version:     1.3.0
  * Author:      You
  */
 
 // Register Producer CPT
 add_action('init', fn() => register_post_type('producer', [
-  'label'          => 'Producers',
-  'public'         => true,
-  'show_in_rest'   => true,
-  'menu_icon'      => 'dashicons-store',
-  'supports'       => ['title','editor','thumbnail','custom-fields'],
+  'label'        => 'Producers',
+  'public'       => true,
+  'show_in_rest' => true,
+  'menu_icon'    => 'dashicons-store',
+  'supports'     => ['title','editor','thumbnail','custom-fields'],
 ]));
 
 // Settings page
@@ -20,6 +20,7 @@ add_action('admin_menu', fn() => add_menu_page(
   'Map Settings', 'Map Settings', 'manage_options', 'cmp-settings', 'cmp_render_settings_page'
 ));
 
+// Register settings
 add_action('admin_init', function() {
   register_setting('cmp_settings_group','cmp_categories', [
     'type'              => 'array',
@@ -28,29 +29,40 @@ add_action('admin_init', function() {
       : []
   ]);
   register_setting('cmp_settings_group','cmp_custom_css', [
-    'type'              => 'string',
+    'type' => 'string',
     'sanitize_callback' => 'wp_strip_all_tags'
+  ]);
+  register_setting('cmp_settings_group','cmp_pin_template', [
+    'type' => 'string',
+    'sanitize_callback' => function($tpl) { return wp_kses_post($tpl); } // Allow limited HTML
   ]);
 });
 
+// Enqueue admin scripts
 add_action('admin_enqueue_scripts', function($hook) {
   if ($hook !== 'toplevel_page_cmp-settings') return;
   wp_enqueue_style('wp-color-picker');
   wp_enqueue_script('cmp-admin-js', plugin_dir_url(__FILE__).'admin.js', ['jquery','wp-color-picker'], null, true);
 });
 
+// Settings Page Renderer
 function cmp_render_settings_page() {
   $cats = get_option('cmp_categories', []);
 
-  // Load default CSS from static/css/main.css
+  // Load default CSS
   $css_file    = plugin_dir_path(__FILE__) . 'static/css/main.css';
-  $default_css = file_exists($css_file)
-      ? file_get_contents($css_file)
-      : '';
+  $default_css = file_exists($css_file) ? file_get_contents($css_file) : '';
 
-  // Get saved custom CSS, or fall back to default file contents
+  // Load default Pin Template
+  $tpl_file    = plugin_dir_path(__FILE__) . 'static/pin-template.html';
+  $default_tpl = file_exists($tpl_file) ? file_get_contents($tpl_file) : 
+    '<b>${marker.title}</b><br>${ marker.profile_img_url ? `<img src="${marker.profile_img_url}" width="200"><br>` : "" }<a href="${marker.page_url}">View</a>';
+
   $saved_css = get_option('cmp_custom_css', '');
   $css       = trim($saved_css) !== '' ? $saved_css : $default_css;
+
+  $saved_tpl = get_option('cmp_pin_template', '');
+  $tpl       = trim($saved_tpl) !== '' ? $saved_tpl : $default_tpl;
   ?>
   <div class="wrap"><h1>Map Settings</h1>
   <form method="post" action="options.php" id="cmp-settings-form">
@@ -71,11 +83,12 @@ function cmp_render_settings_page() {
     <p><button id="cmp-add-row" class="button">Add Category</button></p>
 
     <h2>Custom CSS</h2>
-    <textarea name="cmp_custom_css" id="cmp-custom-css" class="large-text code" rows="16"><?php echo esc_textarea($css); ?></textarea>
+    <textarea name="cmp_custom_css" id="cmp-custom-css" class="large-text code" rows="14"><?php echo esc_textarea($css); ?></textarea>
+    <p><button type="button" class="button" id="cmp-reset-css">Reset CSS to Default</button></p>
 
-    <p>
-      <button type="button" class="button" id="cmp-reset-css">Set to Default CSS</button>
-    </p>
+    <h2>Pin Popup Template (HTML)</h2>
+    <textarea name="cmp_pin_template" id="cmp-pin-template" class="large-text code" rows="8"><?php echo esc_textarea($tpl); ?></textarea>
+    <p><button type="button" class="button" id="cmp-reset-template">Reset Template to Default</button></p>
 
     <?php submit_button(); ?>
   </form>
@@ -85,27 +98,29 @@ function cmp_render_settings_page() {
       const defaultCss = <?php echo json_encode($default_css); ?>;
       document.getElementById('cmp-custom-css').value = defaultCss;
     });
+    document.getElementById('cmp-reset-template').addEventListener('click', function() {
+      const defaultTpl = <?php echo json_encode($default_tpl); ?>;
+      document.getElementById('cmp-pin-template').value = defaultTpl;
+    });
   </script>
-
   </div>
   <?php
 }
 
-
-
-// Front-end assets & inline CSS
+// Front-end assets & inline CSS + data
 add_action('wp_enqueue_scripts', function() {
   wp_enqueue_style('leaflet-css', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
   wp_enqueue_script('leaflet-js', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', [], null, true);
   wp_enqueue_style('extra-markers-css', plugin_dir_url(__FILE__).'static/css/leaflet.extra-markers.min.css');
-  wp_enqueue_style('cmp-main-css', plugin_dir_url(__FILE__).'static/css/main.css');
+  wp_enqueue_style('cmp-main-css', plugin_dir_url(__FILE__) . 'static/css/main.css');
   wp_enqueue_script('extra-markers-js', plugin_dir_url(__FILE__).'static/js/leaflet.extra-markers.min.js', ['leaflet-js'], null, true);
-  wp_enqueue_script('cmp-main-js', plugin_dir_url(__FILE__).'src/main.js', ['leaflet-js'], null, true);
+  wp_enqueue_script('cmp-main-js', plugin_dir_url(__FILE__) . 'src/main.js', ['leaflet-js'], null, true);
 
-  // Pass data & custom CSS
+  // Pass dynamic settings
   wp_localize_script('cmp-main-js','CMP',[
-    'base_url'   => get_site_url(),
-    'categories' => get_option('cmp_categories',[])
+    'base_url'     => get_site_url(),
+    'categories'   => get_option('cmp_categories', []),
+    'pin_template' => get_option('cmp_pin_template', '')
   ]);
 
   $custom_css = get_option('cmp_custom_css', '');
@@ -126,5 +141,3 @@ add_shortcode('custom_map', fn() => '<h1>Testing Map</h1>
     </div>
     <div id="map"></div>
   </div>');
-
-
