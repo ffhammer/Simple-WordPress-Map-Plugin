@@ -7,14 +7,10 @@ const base_url = CMP.base_url;
 const API = url=> `${base_url}/wp-json${url}`;
 
 
-const category_to_color = {
-  Accommodation: "#FF5733",
-  Restaurants: "#33FF57",
-  Cultural: "#3357FF",
-  Stores: "#FF33A1",
-  Nature: "#33FFF5",
-  Others: "#FFC300",
-};
+const category_to_color = Object.fromEntries(
+  (CMP.categories || []).map(c => [c.name, c.color])
+);
+
 
 async function fetch_image_url(media_id) {
   try {
