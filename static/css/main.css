@@ -1,0 +1,36 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+}
+
+h1 {
+  margin: 16px;
+}
+
+.container {
+    display: flex;
+    align-items: flex-start;
+    padding: 0 16px 16px 16px;
+    gap: 24px;
+  }
+  
+  #filter-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    padding-top: 8px;
+    min-width: 180px;
+  }
+  
+  #filter-controls input[type="checkbox"] {
+    margin-right: 6px;
+  }
+  
+  #map {
+    flex: 1;
+    height: 600px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  
