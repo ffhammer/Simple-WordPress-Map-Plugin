@@ -4,7 +4,7 @@ This plugin lets you **easily create a dynamic, filterable Leaflet map** showcas
 
 - 📍 Show posts as map markers
 - 🎨 Assign colors by category
-- 🗺️ Fully customize pin popups (HTML templates)
+- 🗺️ Fully customize pin popups & map layouts (HTML templates)
 - 🎨 Edit the map's CSS
 - 🧩 Configure required ACF fields
 - 📝 All settings manageable in WordPress Admin
@@ -61,11 +61,14 @@ Assign each category a color using the WordPress color picker.
 Customize the content inside the marker popup using variables.
 
 Example:
-´´´html
-<b>${marker.title}</b><br>
-${marker.profile_img_url ? `<img src="${marker.profile_img_url}" width="200"><br>` : ''}
-<a href="${marker.page_url}">View Details</a>
-´´´
+
+```html
+<b>${marker.title}</b><br />
+${marker.profile_img_url ? `<img
+  src="${marker.profile_img_url}"
+  width="200"
+/><br />` : ''} <a href="${marker.page_url}">View Details</a>
+```
 
 All fields from the ACF fields or WP Post object (like `marker.title`) are available.
 

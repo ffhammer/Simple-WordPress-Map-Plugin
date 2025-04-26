@@ -114,6 +114,7 @@ function cmp_render_settings_page() {
     <li><strong>ACF Field Mapping:</strong> Configure which ACF fields provide latitude, longitude, image, and category data.</li>
     <li><strong>Category Filtering:</strong> Filter markers dynamically based on category, each with customizable colors.</li>
     <li><strong>Customizable Pin Popup HTML:</strong> Define your own popup layout using dynamic variables like <code>${marker.title}</code>, <code>${marker.description}</code>, etc.</li>
+    <li><strong>Customizable Map Container HTML:</strong> Modify the HTML structure of the map container directly from the settings panel.</li>
     <li><strong>Custom Map CSS:</strong> Adjust styling by overriding the default map CSS directly from the settings panel.</li>
     <li><strong>Additional ACF Fields:</strong> Besides the required ones, any other ACF field can be included in the popup HTML using dynamic variables.</li>
   </ul>
