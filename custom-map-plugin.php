@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Custom Map Plugin
  * Description: Embed Leaflet map via `[custom_map]` with editable ACF‐field mappings, categories/colors, custom CSS, and custom pin HTML.
- * Version:     1.4.0
+ * Version:     1.5.0
  * Author:      You
  */
 
@@ -65,6 +65,12 @@ add_action('admin_init', function() {
     'type'              => 'string',
     'sanitize_callback' => 'sanitize_text_field'
   ]);
+  // **** NEW: Map Container HTML Structure ****
+  register_setting('cmp_settings_group', 'cmp_map_html_structure', [
+    'type' => 'string',
+    // Standard sanitization. Might be too strict for complex structures. Change with caution!
+    'sanitize_callback' => 'wp_kses_post'
+]);
 });
 
 // 4) Enqueue admin assets
@@ -86,6 +92,11 @@ function cmp_render_settings_page() {
   $default_tpl = file_exists($tpl_file) ? file_get_contents($tpl_file) : '<b>${marker.title}</b><br>${marker.profile_img_url?`<img src=\"${marker.profile_img_url}\" width=\"200\"><br>`:""}<a href=\"${marker.page_url}\">View</a>';
   $saved_tpl   = get_option('cmp_pin_template','');
   $tpl         = trim($saved_tpl) ? $saved_tpl : $default_tpl;
+  // **** NEW: Map HTML Structure Defaults/Saved ****
+  $fallback_html_file = plugin_dir_path(__FILE__) . 'static/fall_back_index.html';
+  $default_map_html = file_exists($fallback_html_file) ? file_get_contents($fallback_html_file) : '<div id="map"></div>';
+  $saved_map_html = get_option('cmp_map_html_structure', '');
+  $map_html = trim($saved_map_html) ? $saved_map_html : $default_map_html;
   ?>
   <div class="wrap"><h1>Map Settings</h1>
   <form method="post" action="options.php" id="cmp-settings-form">
@@ -200,14 +211,21 @@ jQuery(document).ready(function($){
     <textarea name="cmp_pin_template" id="cmp-pin-template" class="large-text code" rows="8"><?php echo esc_textarea($tpl); ?></textarea>
     <p><button type="button" class="button" id="cmp-reset-template">Reset Template to Default</button></p>
 
+    <h2>Map Container HTML Structure</h2>
+    <p><strong>Advanced:</strong> Directly edit the HTML structure that wraps the map and filters. <strong style="color:red;">Warning:</strong> Ensure essential element IDs like <code>#map</code> and <code>#category-filters</code> are present in your custom HTML, otherwise the map or filtering may break.</p>
+    <textarea name="cmp_map_html_structure" id="cmp-map-html-structure" class="large-text code" rows="10"><?php echo esc_textarea($map_html); ?></textarea>
+    <p class="description">The default structure is loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/fall_back_index.html'); ?></code>.</p>
+    <p><button type="button" class="button" id="cmp-reset-map-html">Reset Map HTML to Default</button></p>
     <?php submit_button(); ?>
   </form>
-
+    
   <script>
   document.getElementById('cmp-reset-css').onclick = () =>
     document.getElementById('cmp-custom-css').value = <?php echo json_encode($default_css); ?>;
   document.getElementById('cmp-reset-template').onclick = () =>
     document.getElementById('cmp-pin-template').value = <?php echo json_encode($default_tpl); ?>;
+    document.getElementById('cmp-reset-map-html').onclick = () =>
+    document.getElementById('cmp-map-html-structure').value = <?php echo json_encode($default_map_html); ?>;
   </script>
   </div>
   <?php
@@ -235,15 +253,37 @@ add_action('wp_enqueue_scripts', function() {
 });
 
 // 7) Shortcode
-add_shortcode('custom_map', fn() => '
-  <div class="container">
-    <div id="filter-controls">
-      <div id="category-filters"></div>
-      <div style="margin-top:10px">
-        <input type="checkbox" id="filter-all" checked />
-        <label for="filter-all" style="display:inline">Show All</label>
-      </div>
+add_shortcode('custom_map', function() {
+  // Get the saved custom HTML structure
+  $saved_map_html = get_option('cmp_map_html_structure', '');
+
+  // Get the fallback HTML structure from file
+  $fallback_html_file = plugin_dir_path(__FILE__) . 'static/fall_back_index.html';
+  $fallback_map_html = '';
+  if (file_exists($fallback_html_file)) {
+      $fallback_map_html = file_get_contents($fallback_html_file);
+  } else {
+      // Define a minimal structure if the file is missing
+      $fallback_map_html = '
+<div class="container">
+  <p style="color:red;">Error: Map fallback HTML file not found at <code>' . esc_html($fallback_html_file) . '</code></p>
+  <div id="filter-controls" style="margin-bottom: 15px;">
+    <p>Filters:</p>
+    <div id="category-filters"><em>Category filters will load here.</em></div>
+    <div style="margin-top:10px">
+      <input type="checkbox" id="filter-all" checked />
+      <label for="filter-all" style="display:inline">Show All</label>
     </div>
-    <div id="map"></div>
   </div>
-');
+  <div id="map" style="height: 400px; background: #eee;"><em>Map container</em></div>
+</div>';
+  }
+
+  // Use the saved HTML if it's not empty, otherwise use the fallback
+  $output_html = trim($saved_map_html) ? $saved_map_html : $fallback_map_html;
+
+  // Output the HTML structure directly.
+  // It's crucial that the admin saved valid, safe HTML here.
+  // The sanitization happened during save (wp_kses_post by default).
+  return $output_html;
+});
