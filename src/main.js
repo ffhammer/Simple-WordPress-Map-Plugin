@@ -6,7 +6,6 @@ const API = url => `${base_url}/wp-json${url}`;
 // Minimum required ACF fields
 const requiredAcfFields = CMP.requiredAcfFields ;
 
-console.log(requiredAcfFields);
 
 if (!requiredAcfFields || Object.keys(requiredAcfFields).length === 0) {
   console.error("Failed to get ACF fields");
@@ -71,7 +70,6 @@ async function parseMarker(data) {
   for (const [acfKey, value] of Object.entries(data.acf)) {
     if (!requiredKeys.includes(acfKey)) {
       marker[acfKey] = value;
-      console.log(`new key val ${acfKey} ${value}`)
     }
   }
 
@@ -105,10 +103,6 @@ fetch(API('/wp/v2/producer?per_page=100'))
         shape: 'circle', markerColor: color, prefix: 'fa', icon: 'fa-map-marker', svg: true
       });
 
-      if (marker.desription){
-
-        console.log(marker)
-      }
       const popupHtml = renderPopup(marker);
 
       if (!categoryLayers[cat]) {
