@@ -60,6 +60,11 @@ add_action('admin_init', function() {
     'type'=>'string',
     'sanitize_callback'=>fn($s)=>wp_kses_post($s)
   ]);
+
+  register_setting('cmp_settings_group','cmp_post_type_name', [
+    'type'              => 'string',
+    'sanitize_callback' => 'sanitize_text_field'
+  ]);
 });
 
 // 4) Enqueue admin assets
@@ -87,6 +92,42 @@ function cmp_render_settings_page() {
     <?php settings_fields('cmp_settings_group'); ?>
 
     <h2>ACF Field Mappings</h2>
+<div style="background: #fff; padding: 1.5rem; margin-bottom: 2rem; border-left: 5px solid #0073aa;">
+  <h2>Plugin Overview</h2>
+  <p>This plugin allows you to create a fully customizable, filterable Leaflet map based on any WordPress post type. It is ideal for showcasing producers, locations, stores, or any content with geolocation data.</p>
+
+  <h3>Key Features:</h3>
+  <ul>
+    <li><strong>Shortcode:</strong> Use <code>[custom_map]</code> to embed the map anywhere.</li>
+    <li><strong>Post Type:</strong> Select which post type to display (default is <code>producer</code>).</li>
+    <li><strong>ACF Field Mapping:</strong> Configure which ACF fields provide latitude, longitude, image, and category data.</li>
+    <li><strong>Category Filtering:</strong> Filter markers dynamically based on category, each with customizable colors.</li>
+    <li><strong>Customizable Pin Popup HTML:</strong> Define your own popup layout using dynamic variables like <code>${marker.title}</code>, <code>${marker.description}</code>, etc.</li>
+    <li><strong>Custom Map CSS:</strong> Adjust styling by overriding the default map CSS directly from the settings panel.</li>
+    <li><strong>Additional ACF Fields:</strong> Besides the required ones, any other ACF field can be included in the popup HTML using dynamic variables.</li>
+  </ul>
+
+  <h3>Minimum Required ACF Fields:</h3>
+  <ul>
+    <li><strong>profile_img</strong> — (Media ID) for the profile image of the marker.</li>
+    <li><strong>latitude</strong> — (Decimal) for the marker’s latitude.</li>
+    <li><strong>longitude</strong> — (Decimal) for the marker’s longitude.</li>
+    <li><strong>category</strong> — (Text) used for filtering and setting marker colors.</li>
+  </ul>
+
+  <p>All field names are configurable — you can adapt them to your ACF setup without code changes.</p>
+</div>
+
+    <?php
+    $pt = get_option('cmp_post_type_name','producer');
+    ?>
+    <h2>Post Type</h2>
+    <input type="text"
+      name="cmp_post_type_name"
+      value="<?php echo esc_attr($pt);?>"
+      class="regular-text"/>
+    <p class="description">Slug of the CPT to fetch (default <code>producer</code>).</p>
+
     <table class="form-table">
       <?php foreach(['profile_img','latitude','longitude','category'] as $key): ?>
       <tr>
@@ -103,19 +144,53 @@ function cmp_render_settings_page() {
     </table>
 
     <h2>Categories &amp; Colors</h2>
-    <table id="cmp-cats-table" class="form-table">
-      <thead><tr><th>Name</th><th>Color</th><th></th></tr></thead>
-      <tbody>
-      <?php foreach($cats as $i=>$c): ?>
-        <tr>
-          <td><input name="cmp_categories[<?php echo $i; ?>][name]" value="<?php echo esc_attr($c['name']); ?>" /></td>
-          <td><input name="cmp_categories[<?php echo $i; ?>][color]" class="cmp-color-field" value="<?php echo esc_attr($c['color']); ?>" /></td>
-          <td><button class="button cmp-remove-row">Remove</button></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-    <p><button id="cmp-add-row" class="button">Add Category</button></p>
+<table id="cmp-cats-table" class="form-table">
+  <thead><tr><th>Name</th><th>Color</th><th></th></tr></thead>
+  <tbody>
+  <?php foreach($cats as $i => $c): ?>
+    <tr>
+      <td>
+        <input name="cmp_categories[<?php echo $i; ?>][name]"
+               value="<?php echo esc_attr($c['name']); ?>"
+               class="regular-text" />
+      </td>
+      <td>
+        <input name="cmp_categories[<?php echo $i; ?>][color]"
+               value="<?php echo esc_attr($c['color']); ?>"
+               class="cmp-color-field" 
+               type="text" />
+      </td>
+      <td><button type="button" class="button cmp-remove-row">Remove</button></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+</table>
+<p><button type="button" id="cmp-add-row" class="button">Add Category</button></p>
+
+<script>
+jQuery(document).ready(function($){
+  $('.cmp-color-field').wpColorPicker();
+
+  $('#cmp-add-row').on('click', function(e) {
+    e.preventDefault();
+    const idx = $('#cmp-cats-table tbody tr').length;
+    $('#cmp-cats-table tbody').append(`
+      <tr>
+        <td><input name="cmp_categories[${idx}][name]" class="regular-text" /></td>
+        <td><input name="cmp_categories[${idx}][color]" type="text" class="cmp-color-field" /></td>
+        <td><button type="button" class="button cmp-remove-row">Remove</button></td>
+      </tr>
+    `);
+    $('#cmp-cats-table tbody tr:last .cmp-color-field').wpColorPicker();
+  });
+
+  $(document).on('click', '.cmp-remove-row', function(e){
+    e.preventDefault();
+    $(this).closest('tr').remove();
+  });
+});
+</script>
+
 
     <h2>Custom CSS</h2>
     <textarea name="cmp_custom_css" id="cmp-custom-css" class="large-text code" rows="12"><?php echo esc_textarea($css); ?></textarea>
@@ -148,10 +223,11 @@ add_action('wp_enqueue_scripts', function() {
   wp_enqueue_script('cmp-main-js',plugin_dir_url(__FILE__).'src/main.js',['leaflet-js'],null,true);
 
   wp_localize_script('cmp-main-js','CMP',[
-    'base_url'     => get_site_url(),
-    'requiredAcfFields'   => get_option('cmp_requiredAcfFields', []),
-    'categories'   => get_option('cmp_categories', []),
-    'pin_template' => get_option('cmp_pin_template', '')
+    'base_url'         => get_site_url(),
+    'post_type_name'   => get_option('cmp_post_type_name','producer'),
+    'requiredAcfFields'=> get_option('cmp_requiredAcfFields', []),
+    'categories'       => get_option('cmp_categories', []),
+    'pin_template'     => get_option('cmp_pin_template',''),
   ]);
 
   $custom_css = get_option('cmp_custom_css','');
@@ -160,7 +236,6 @@ add_action('wp_enqueue_scripts', function() {
 
 // 7) Shortcode
 add_shortcode('custom_map', fn() => '
-  <h1>Testing Map</h1>
   <div class="container">
     <div id="filter-controls">
       <div id="category-filters"></div>

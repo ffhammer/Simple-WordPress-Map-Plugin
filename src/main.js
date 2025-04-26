@@ -5,7 +5,7 @@ const API = url => `${base_url}/wp-json${url}`;
 
 // Minimum required ACF fields
 const requiredAcfFields = CMP.requiredAcfFields ;
-
+const postType = CMP.post_type_name || 'producer';
 
 if (!requiredAcfFields || Object.keys(requiredAcfFields).length === 0) {
   console.error("Failed to get ACF fields");
@@ -88,7 +88,7 @@ const categoryLayers = {};
 const filterMenu = document.getElementById('category-filters');
 const filterAllCheckbox = document.getElementById('filter-all');
 
-fetch(API('/wp/v2/producer?per_page=100'))
+fetch(API(`/wp/v2/${postType}?per_page=100`))
   .then(r => r.json())
   .then(async data => {
     const markers = await Promise.all(data.map(d => parseMarker(d).catch(e => {
