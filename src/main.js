@@ -134,7 +134,7 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
       cb.checked = true;
       const label = document.createElement('label');
       label.htmlFor  = cb.id;
-      label.innerText = 'Show All';
+      label.innerHTML = '<span style="width:12px;height:12px;display:inline-block;border-radius:50%;margin-right:5px;visibility:hidden"></span>Show All';
       div.append(cb, label);
       filterMenu.append(div);
     }
