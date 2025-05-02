@@ -103,7 +103,7 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
     })));
     markers.filter(m => m).forEach(marker => {
       const cat = marker.category || 'Others';
-      const color = category_to_color[cat] || '#888';
+      const color = category_to_color[cat] || '#000000';
 
       const icon = L.ExtraMarkers.icon({
         shape: 'circle', markerColor: color, prefix: 'fa', icon: 'fa-map-marker', svg: true
@@ -113,10 +113,7 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
 
       if (!categoryLayers[cat]) {
         
-        const { wrapper, html } = generate_category_box(cat, color);
-        filterMenu.append(wrapper.firstElementChild)
-            // labelTpl has only one span, we can just assign innerHTML
-        console.log(html);
+        filterMenu.append(generate_category_box(cat, color));
 
       }
       
@@ -126,8 +123,7 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
         .addTo(categoryLayers[marker.category]);
     });
     if (!filterMenu.querySelector('#filter-all')) {
-      const { wrapper, html } = generate_category_box("Show all", "#000000");
-      filterMenu.append(wrapper.firstElementChild)
+      filterMenu.append(generate_category_box("Show all", "#000000"));
     }
 
     const allCb = filterMenu.querySelectorAll('input');
@@ -136,17 +132,24 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
   })
   .catch(err => console.error('Error loading producers:', err));
 
-function generate_category_box(cat, color) {
-  categoryLayers[cat] = L.layerGroup().addTo(map);
-  const html = labelTpl
-    .replace(/{{category}}/g, cat)
-    .replace(/{{color}}/g, color);
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  const cb = wrapper.querySelector('input');
-  cb.onchange = () => handleFilterChange(cb);
-  return { wrapper, html };
-}
+  function generate_category_box(cat, color) {
+    categoryLayers[cat] = L.layerGroup().addTo(map);
+    const html = labelTpl
+      .replace(/{{category}}/g, cat)
+      .replace(/{{color}}/g, color);
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html.trim();
+    const btn = wrapper.querySelector('.category-btn');
+    btn.addEventListener('click', () => {
+      const active = !btn.classList.toggle('inactive');
+      active
+        ? map.addLayer(categoryLayers[cat])
+        : map.removeLayer(categoryLayers[cat]);
+      updateShowAllState();
+    });
+    return wrapper.firstElementChild;  
+  }
+  
 
 // Filter logic
 function handleFilterChange(cb) {
