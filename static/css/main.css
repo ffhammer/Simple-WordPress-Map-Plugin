@@ -52,7 +52,7 @@ h1 {
 #filter-controls {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1.5rem;
   font-size: 0.9rem;
   padding-top: 0.5rem;
   min-width: 12rem;
@@ -81,6 +81,7 @@ h1 {
   height: 100%;
   position: relative;
   border-radius: 10px;
+  margin-bottom: 1.7rem;
 }
 
 .category-bg {
