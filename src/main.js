@@ -86,7 +86,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const categoryLayers = {};
 const filterMenu = document.getElementById('category-filters');
-const filterAllCheckbox = document.getElementById('filter-all');
 
 fetch(API(`/wp/v2/${postType}?per_page=100`))
   .then(r => r.json())
@@ -120,12 +119,28 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
         div.append(cb, label);
         filterMenu.append(div);
       }
+      
 
       L.marker([marker.latitude, marker.longitude], { icon })
         .bindPopup(popupHtml)
         .addTo(categoryLayers[marker.category]);
     });
 
+    if (!filterMenu.querySelector('#filter-all')) {
+      const div = document.createElement('div');
+      const cb  = document.createElement('input');
+      cb.type    = 'checkbox';
+      cb.id      = 'filter-all';
+      cb.checked = true;
+      const label = document.createElement('label');
+      label.htmlFor  = cb.id;
+      label.innerText = 'Show All';
+      div.append(cb, label);
+      filterMenu.append(div);
+    }
+
+    const allCb = filterMenu.querySelectorAll('input');
+    const filterAllCheckbox = allCb[allCb.length - 1];
     filterAllCheckbox.onchange = () => handleFilterAllChange(filterAllCheckbox);
   })
   .catch(err => console.error('Error loading producers:', err));
@@ -138,17 +153,23 @@ function handleFilterChange(cb) {
 }
 
 function handleFilterAllChange(cb) {
-  Object.values(categoryLayers).forEach((layer, i) => {
-    const ck = filterMenu.querySelectorAll('input')[i];
+  const cbs = Array.from(filterMenu.querySelectorAll('input'));
+  const categoryCbs = cbs.slice(0, -1);
+  categoryCbs.forEach(ck => {
     ck.checked = cb.checked;
-    cb.checked ? map.addLayer(layer) : map.removeLayer(layer);
+    ck.checked
+      ? map.addLayer(categoryLayers[ck.value])
+      : map.removeLayer(categoryLayers[ck.value]);
   });
 }
 
 function updateShowAllState() {
-  const cbs = filterMenu.querySelectorAll('input');
-  const all = Array.from(cbs).every(cb => cb.checked);
-  const none = Array.from(cbs).every(cb => !cb.checked);
+  const cbs = Array.from(filterMenu.querySelectorAll('input'));
+  const categoryCbs = cbs.slice(0, -1);
+  const all = categoryCbs.every(cb => cb.checked);
+  const none = categoryCbs.every(cb => !cb.checked);
+  const filterAllCheckbox = cbs[cbs.length - 1];
   filterAllCheckbox.checked = all;
   filterAllCheckbox.indeterminate = !all && !none;
 }
+
