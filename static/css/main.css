@@ -1,10 +1,36 @@
 /* General body settings: remove default margin, set clean font, base size, and light background */
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  font-family: Outfit;
   font-size: 1rem;
   line-height: 1.5;
   background-color: #f9f9f9;
+}
+
+
+.title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 34.50px;
+  word-wrap: break-word;
+}
+
+/* Title variants */
+.title-black {
+  color: #000;
+}
+.title-gold {
+  color: #F2B500;
+}
+.title-dot {
+  display: inline-block;
+  width: 0.2em;      /* tweak size */
+  height: 0.2em;
+  background: currentColor;
+  border-radius: 50%;
+  vertical-align: baseline;
+  margin-left: 0.em; /* spacing */
 }
 
 /* Style for main heading: spacing around and slightly larger text */
