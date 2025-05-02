@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Map Dev</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Leaflet Extra Markers CSS -->
+    <link rel="stylesheet" href="static/css/leaflet.extra-markers.min.css" />
+
+    <!-- Your Plugin's Main CSS -->
+    <link rel="stylesheet" href="static/css/main.css" />
+
+    <!-- Inline styles for local dev specific adjustments if needed -->
+    <style>
+        /* Add any local-only overrides here if necessary */
+        body {
+            padding: 1rem; /* Add some padding for better viewing */
+        }
+        /* Ensure images resolve correctly - adjust path if needed */
+        .extra-marker { background-image: url("static/img/markers_default.png"); }
+        .extra-marker-shadow { background-image: url("static/img/markers_shadow.png"); }
+        @media (min--moz-device-pixel-ratio:1.5),(-webkit-min-device-pixel-ratio:1.5),(min-device-pixel-ratio:1.5),(min-resolution:1.5dppx){
+            .extra-marker{ background-image:url("static/img/markers_default@2x.png"); }
+            .extra-marker-shadow{ background-image:url("static/img/markers_shadow@2x.png"); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- === PASTE CONTENT FROM static/fall_back_index.html HERE === -->
+    <h1>Testing Map (Local)</h1>
+    <div class="container">
+      <div id="filter-controls">
+        <div id="category-filters"></div>
+        <!-- We need the 'Show All' checkbox structure defined in main.js logic -->
+        <!-- It will be added dynamically by the script, but ensure #filter-controls and #category-filters exist -->
+      </div>
+      <div id="map"></div>
+    </div>
+    <!-- === END OF PASTED CONTENT === -->
+
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Leaflet Extra Markers JS -->
+    <!-- IMPORTANT: Make sure this file exists at this path! -->
+    <script src="static/js/leaflet.extra-markers.min.js"></script>
+
+    <!-- Mock CMP Data (Simulates wp_localize_script) -->
+    <script>
+        // --- Configuration Start ---
+        // These values should mirror your typical WordPress settings for testing
+        const CMP = {
+            // Use a placeholder or leave empty if API calls are fully mocked
+            base_url: 'http://map.local/',
+            // Match the post type slug you use
+            post_type_name: 'producer',
+            // Mirror your ACF field mappings
+            requiredAcfFields: {
+                profile_img: 'profile_img', // ACF key for image ID
+                latitude: 'latitude',
+                longitude: 'longitude',
+                category: 'category'
+                // Add 'page_url' if you map it, otherwise it defaults to post link
+                // page_url: 'page_url'
+            },
+            // Define sample categories and colors
+            categories: [
+                { name: 'Restaurants', color: '#ff0000' },
+                { name: 'Accommodation', color: '#0000ff' },
+                { name: 'Nature', color: '#008000' },
+            ],
+            // Get the default template content (paste from static/pin-template.html)
+            pin_template: `<b>\${marker.title}</b><br>
+\${ marker.profile_img_url ? \`<img src="\${marker.profile_img_url}" width="200"><br>\` : "" }
+<a href="\${marker.page_url}">View</a>`
+        };
+
+        // --- Mock API Data End ---
+
+        // --- Configuration End ---
+    </script>
+
+    <!-- Your Plugin's Main JS -->
+    <!-- IMPORTANT: We will modify this file slightly -->
+    <script src="src/main.js"></script>
+
+</body>
+</html>
