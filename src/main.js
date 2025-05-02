@@ -82,7 +82,7 @@ async function parseMarker(data) {
 }
 
 // Map setup
-const map = L.map('map').setView([9.9, -84.0], 8);
+const map = L.map('map').setView([9.654705892756382, -83.96979657357893], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
