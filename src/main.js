@@ -3,10 +3,6 @@
 const base_url = CMP.base_url;
 const API = url => `${base_url}/wp-json${url}`;
 
-let labelTpl = ''
-fetch('static/filter-label.html')
-  .then(r => r.text())
-  .then(t => labelTpl = t)
 
   
 
@@ -126,17 +122,17 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
       filterMenu.append(generate_category_box("Show all", "#000000"));
     }
 
-    const allCb = filterMenu.querySelectorAll('input');
-    const filterAllCheckbox = allCb[allCb.length - 1];
-    filterAllCheckbox.onchange = () => handleFilterAllChange(filterAllCheckbox);
   })
   .catch(err => console.error('Error loading producers:', err));
 
   function generate_category_box(cat, color) {
     categoryLayers[cat] = L.layerGroup().addTo(map);
-    const html = labelTpl
+    const html = CMP.filterLabelTpl
       .replace(/{{category}}/g, cat)
       .replace(/{{color}}/g, color);
+    console.log(CMP.filterLabelTpl)
+    console.log(html)
+
     const wrapper = document.createElement('div');
     wrapper.innerHTML = html.trim();
     const btn = wrapper.querySelector('.category-btn');
