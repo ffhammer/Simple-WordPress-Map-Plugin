@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Custom Map Plugin
- * Description: Embed Leaflet map via `[custom_map]` with editable ACF‐field mappings, categories/colors, custom CSS, and custom pin HTML.
- * Version:     1.5.0
+ * Description: Embed Leaflet map via `[custom_map]` with editable ACF‐field mappings, categories/colors, custom CSS, custom pin HTML, and custom filter label HTML.
+ * Version:     1.6.0
  * Author:      You
  */
 
@@ -58,7 +58,11 @@ add_action('admin_init', function() {
   // Pin HTML template
   register_setting('cmp_settings_group','cmp_pin_template', [
     'type'=>'string',
-    'sanitize_callback'=>fn($s)=>wp_kses_post($s)
+    'sanitize_callback'=>fn($s)=>wp_kses_post($s) 
+  ]);
+  register_setting('cmp_settings_group','cmp_filter_label_template',[
+    'type'=>'string',
+    'sanitize_callback'=>fn(string $html): string => $html,  // no-op: saves raw HTML
   ]);
 
   register_setting('cmp_settings_group','cmp_post_type_name', [
@@ -97,6 +101,13 @@ function cmp_render_settings_page() {
   $default_map_html = file_exists($fallback_html_file) ? file_get_contents($fallback_html_file) : '<div id="map"></div>';
   $saved_map_html = get_option('cmp_map_html_structure', '');
   $map_html = trim($saved_map_html) ? $saved_map_html : $default_map_html;
+  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/filter-label.html';
+  $default_filter_label = file_exists($filter_label_file)
+    ? file_get_contents($filter_label_file)
+    : '<label><input type="checkbox" class="category-btn" data-category="{category}" checked> <span style="color:{color};">{category}</span></label>';
+  $saved_filter_label   = get_option('cmp_filter_label_template', '');
+  $filter_label_tpl     = trim($saved_filter_label) ? $saved_filter_label : $default_filter_label;
+
   ?>
   <div class="wrap"><h1>Map Settings</h1>
   <form method="post" action="options.php" id="cmp-settings-form">
@@ -114,6 +125,7 @@ function cmp_render_settings_page() {
     <li><strong>ACF Field Mapping:</strong> Configure which ACF fields provide latitude, longitude, image, and category data.</li>
     <li><strong>Category Filtering:</strong> Filter markers dynamically based on category, each with customizable colors.</li>
     <li><strong>Customizable Pin Popup HTML:</strong> Define your own popup layout using dynamic variables like <code>${marker.title}</code>, <code>${marker.description}</code>, etc.</li>
+    <li><strong>Customizable Filter Label HTML:</strong> Define the HTML for each category filter checkbox/label using <code>{category}</code> and <code>{color}</code> placeholders.</li>
     <li><strong>Customizable Map Container HTML:</strong> Modify the HTML structure of the map container directly from the settings panel.</li>
     <li><strong>Custom Map CSS:</strong> Adjust styling by overriding the default map CSS directly from the settings panel.</li>
     <li><strong>Additional ACF Fields:</strong> Besides the required ones, any other ACF field can be included in the popup HTML using dynamic variables.</li>
@@ -212,6 +224,18 @@ jQuery(document).ready(function($){
     <textarea name="cmp_pin_template" id="cmp-pin-template" class="large-text code" rows="8"><?php echo esc_textarea($tpl); ?></textarea>
     <p><button type="button" class="button" id="cmp-reset-template">Reset Template to Default</button></p>
 
+    <h2>Filter Label Template (HTML)</h2>
+     <textarea name="cmp_filter_label_template"
+               id="cmp-filter-label-template"
+               class="large-text code"
+               rows="6"><?php echo esc_textarea($filter_label_tpl); ?></textarea>
+     <p class="description">
+       HTML template for individual category filter labels. Use <code>{color}</code> and <code>{category}</code> as placeholders.
+       Default loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/filter-label.html'); ?></code>.
+     </p>
+     <p><button type="button" class="button" id="cmp-reset-filter-label">Reset Filter Label to Default</button></p>
+
+
     <h2>Map Container HTML Structure</h2>
     <p><strong>Advanced:</strong> Directly edit the HTML structure that wraps the map and filters. <strong style="color:red;">Warning:</strong> Ensure essential element IDs like <code>#map</code> and <code>#category-filters</code> are present in your custom HTML, otherwise the map or filtering may break.</p>
     <textarea name="cmp_map_html_structure" id="cmp-map-html-structure" class="large-text code" rows="10"><?php echo esc_textarea($map_html); ?></textarea>
@@ -227,6 +251,8 @@ jQuery(document).ready(function($){
     document.getElementById('cmp-pin-template').value = <?php echo json_encode($default_tpl); ?>;
     document.getElementById('cmp-reset-map-html').onclick = () =>
     document.getElementById('cmp-map-html-structure').value = <?php echo json_encode($default_map_html); ?>;
+    document.getElementById('cmp-reset-filter-label').onclick = () =>
+     document.getElementById('cmp-filter-label-template').value = <?php echo json_encode($default_filter_label); ?>;
   </script>
   </div>
   <?php
@@ -240,6 +266,11 @@ add_action('wp_enqueue_scripts', function() {
   wp_enqueue_style('cmp-main-css',plugin_dir_url(__FILE__).'static/css/main.css');
   wp_enqueue_script('extra-markers-js',plugin_dir_url(__FILE__).'static/js/leaflet.extra-markers.min.js',['leaflet-js'],null,true);
   wp_enqueue_script('cmp-main-js',plugin_dir_url(__FILE__).'src/main.js',['leaflet-js'],null,true);
+  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/filter-label.html';
+  $default_filter_label = file_exists($filter_label_file) ? file_get_contents($filter_label_file) : '<label><input type="checkbox" class="category-btn" data-category="{category}" checked> <span style="color:{color};">{category}</span></label>';
+  $saved_filter_label   = get_option('cmp_filter_label_template', '');
+  $filter_label_tpl     = trim($saved_filter_label) ? $saved_filter_label : $default_filter_label;
+
 
   wp_localize_script('cmp-main-js','CMP',[
     'base_url'         => get_site_url(),
@@ -247,6 +278,7 @@ add_action('wp_enqueue_scripts', function() {
     'requiredAcfFields'=> get_option('cmp_requiredAcfFields', []),
     'categories'       => get_option('cmp_categories', []),
     'pin_template'     => get_option('cmp_pin_template',''),
+    'filterLabelTpl'   => $filter_label_tpl,
   ]);
 
   $custom_css = get_option('cmp_custom_css','');
