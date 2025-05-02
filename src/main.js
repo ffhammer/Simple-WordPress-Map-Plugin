@@ -140,15 +140,34 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
     const wrapper = document.createElement('div');
     wrapper.innerHTML = html.trim();
     const btn = wrapper.querySelector('.category-btn');
-    btn.addEventListener('click', () => {
-      const active = !btn.classList.toggle('inactive');
-      active
-        ? map.addLayer(categoryLayers[cat])
-        : map.removeLayer(categoryLayers[cat]);
-      updateShowAllState();
-    });
-    return wrapper.firstElementChild;  
+  
+    if (cat === 'Show all') {
+      // toggle every layer
+      btn.addEventListener('click', () => {
+        // if any layer is hidden, show them all, else hide them all
+        const anyHidden = Object.values(categoryLayers)
+          .some(layer => !map.hasLayer(layer));
+        Object.values(categoryLayers).forEach(layer => {
+          anyHidden ? map.addLayer(layer) : map.removeLayer(layer);
+        });
+        // update other buttons’ active state
+        document
+          .querySelectorAll('.category-btn')
+          .forEach(b => b.classList.toggle('inactive', !anyHidden));
+      });
+    } else {
+      // per‐category toggle
+      btn.addEventListener('click', () => {
+        const active = !btn.classList.toggle('inactive');
+        active
+          ? map.addLayer(categoryLayers[cat])
+          : map.removeLayer(categoryLayers[cat]);
+      });
+    }
+  
+    return wrapper.firstElementChild;
   }
+  
   
 
 // Filter logic
