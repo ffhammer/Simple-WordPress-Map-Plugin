@@ -3,6 +3,12 @@
 const base_url = CMP.base_url;
 const API = url => `${base_url}/wp-json${url}`;
 
+let labelTpl = ''
+fetch('static/filter-label.html')
+  .then(r => r.text())
+  .then(t => labelTpl = t)
+
+
 // Minimum required ACF fields
 const requiredAcfFields = CMP.requiredAcfFields ;
 const postType = CMP.post_type_name || 'producer';
@@ -115,7 +121,14 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
         cb.onchange = () => handleFilterChange(cb);
         const label = document.createElement('label');
         label.htmlFor = cb.id;
-        label.innerHTML = `<span style="width:12px;height:12px;display:inline-block;background:${color};border-radius:50%;margin-right:5px"></span>${cat}`;
+        label.innerHTML =labelTpl
+        .replace('{{category}}', cat)
+        .replace('{{color}}', color)
+        .split(/(?=<span)/);
+            // labelTpl has only one span, we can just assign innerHTML
+        console.log(label.innerHTML);
+
+        // label.innerHTML = `<span style="width:12px;height:12px;display:inline-block;background:${color};border-radius:50%;margin-right:5px"></span>${cat}`;
         div.append(cb, label);
         filterMenu.append(div);
       }
@@ -125,7 +138,6 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
         .bindPopup(popupHtml)
         .addTo(categoryLayers[marker.category]);
     });
-
     if (!filterMenu.querySelector('#filter-all')) {
       const div = document.createElement('div');
       const cb  = document.createElement('input');
@@ -134,7 +146,10 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
       cb.checked = true;
       const label = document.createElement('label');
       label.htmlFor  = cb.id;
-      label.innerHTML = '<span style="width:12px;height:12px;display:inline-block;border-radius:50%;margin-right:5px;visibility:hidden"></span>Show All';
+      label.innerHTML = labelTpl
+        .replace('{{category}}', "Show All")
+        .replace('{{color}}', "#000000")
+        .split(/(?=<span)/);
       div.append(cb, label);
       filterMenu.append(div);
     }
