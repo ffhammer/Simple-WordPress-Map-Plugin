@@ -8,6 +8,7 @@ fetch('static/filter-label.html')
   .then(r => r.text())
   .then(t => labelTpl = t)
 
+  
 
 // Minimum required ACF fields
 const requiredAcfFields = CMP.requiredAcfFields ;
@@ -111,26 +112,12 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
       const popupHtml = renderPopup(marker);
 
       if (!categoryLayers[cat]) {
-        categoryLayers[cat] = L.layerGroup().addTo(map);
-        const div = document.createElement('div');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.id = `filter-${cat}`;
-        cb.value = cat;
-        cb.checked = true;
-        cb.onchange = () => handleFilterChange(cb);
-        const label = document.createElement('label');
-        label.htmlFor = cb.id;
-        label.innerHTML =labelTpl
-        .replace('{{category}}', cat)
-        .replace('{{color}}', color)
-        .split(/(?=<span)/);
+        
+        const { wrapper, html } = generate_category_box(cat, color);
+        filterMenu.append(wrapper.firstElementChild)
             // labelTpl has only one span, we can just assign innerHTML
-        console.log(label.innerHTML);
+        console.log(html);
 
-        // label.innerHTML = `<span style="width:12px;height:12px;display:inline-block;background:${color};border-radius:50%;margin-right:5px"></span>${cat}`;
-        div.append(cb, label);
-        filterMenu.append(div);
       }
       
 
@@ -139,19 +126,8 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
         .addTo(categoryLayers[marker.category]);
     });
     if (!filterMenu.querySelector('#filter-all')) {
-      const div = document.createElement('div');
-      const cb  = document.createElement('input');
-      cb.type    = 'checkbox';
-      cb.id      = 'filter-all';
-      cb.checked = true;
-      const label = document.createElement('label');
-      label.htmlFor  = cb.id;
-      label.innerHTML = labelTpl
-        .replace('{{category}}', "Show All")
-        .replace('{{color}}', "#000000")
-        .split(/(?=<span)/);
-      div.append(cb, label);
-      filterMenu.append(div);
+      const { wrapper, html } = generate_category_box("Show all", "#000000");
+      filterMenu.append(wrapper.firstElementChild)
     }
 
     const allCb = filterMenu.querySelectorAll('input');
@@ -159,6 +135,18 @@ fetch(API(`/wp/v2/${postType}?per_page=100`))
     filterAllCheckbox.onchange = () => handleFilterAllChange(filterAllCheckbox);
   })
   .catch(err => console.error('Error loading producers:', err));
+
+function generate_category_box(cat, color) {
+  categoryLayers[cat] = L.layerGroup().addTo(map);
+  const html = labelTpl
+    .replace(/{{category}}/g, cat)
+    .replace(/{{color}}/g, color);
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  const cb = wrapper.querySelector('input');
+  cb.onchange = () => handleFilterChange(cb);
+  return { wrapper, html };
+}
 
 // Filter logic
 function handleFilterChange(cb) {

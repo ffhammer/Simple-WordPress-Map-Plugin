@@ -73,6 +73,17 @@ h1 {
   background: #e6e6e6;
 }
 
+.category-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+  position: relative;
+}
+.category-btn.inactive .category-bg {
+  opacity: 0.3;
+}
 
 
 
