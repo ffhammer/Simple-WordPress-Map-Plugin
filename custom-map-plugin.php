@@ -285,38 +285,42 @@ add_action('wp_enqueue_scripts', function() {
   if ($custom_css) wp_add_inline_style('cmp-main-css',$custom_css);
 });
 
-// 7) Shortcode
-add_shortcode('custom_map', function() {
-  // Get the saved custom HTML structure
-  $saved_map_html = get_option('cmp_map_html_structure', '');
-
-  // Get the fallback HTML structure from file
-  $fallback_html_file = plugin_dir_path(__FILE__) . 'static/fall_back_index.html';
-  $fallback_map_html = '';
-  if (file_exists($fallback_html_file)) {
-      $fallback_map_html = file_get_contents($fallback_html_file);
-  } else {
-      // Define a minimal structure if the file is missing
-      $fallback_map_html = '
-<div class="container">
-  <p style="color:red;">Error: Map fallback HTML file not found at <code>' . esc_html($fallback_html_file) . '</code></p>
-  <div id="filter-controls" style="margin-bottom: 15px;">
-    <p>Filters:</p>
-    <div id="category-filters"><em>Category filters will load here.</em></div>
-    <div style="margin-top:10px">
-      <input type="checkbox" id="filter-all" checked />
-      <label for="filter-all" style="display:inline">Show All</label>
+add_shortcode('custom_map', function( $atts ) {
+    $atts        = shortcode_atts( [ 'show' => 'map' ], $atts, 'custom_map' );
+    $show        = $atts['show'];
+    $saved_map_html = get_option('cmp_map_html_structure', '');
+    
+    // Get the fallback HTML structure from file
+    $fallback_html_file = plugin_dir_path(__FILE__) . 'static/fall_back_index.html';
+    $fallback_map_html = '';
+    if (file_exists($fallback_html_file)) {
+        $fallback_map_html = file_get_contents($fallback_html_file);
+    } else {
+        // Define a minimal structure if the file is missing
+        $fallback_map_html = '
+    <div class="container">
+    <p style="color:red;">Error: Map fallback HTML file not found at <code>' . esc_html($fallback_html_file) . '</code></p>
+    <div id="filter-controls" style="margin-bottom: 15px;">
+      <p>Filters:</p>
+      <div id="category-filters"><em>Category filters will load here.</em></div>
+      <div style="margin-top:10px">
+        <input type="checkbox" id="filter-all" checked />
+        <label for="filter-all" style="display:inline">Show All</label>
+      </div>
     </div>
-  </div>
-  <div id="map" style="height: 400px; background: #eee;"><em>Map container</em></div>
-</div>';
-  }
+    <div id="map" style="height: 400px; background: #eee;"><em>Map container</em></div>
+    </div>';
+    }
+    $output_html = trim($saved_map_html) ? $saved_map_html : $fallback_map_html;
 
-  // Use the saved HTML if it's not empty, otherwise use the fallback
-  $output_html = trim($saved_map_html) ? $saved_map_html : $fallback_map_html;
-
-  // Output the HTML structure directly.
-  // It's crucial that the admin saved valid, safe HTML here.
-  // The sanitization happened during save (wp_kses_post by default).
-  return $output_html;
+    if ( $show === 'map' ) {
+        if ( preg_match( '/<div id="map">.*?<\\/div>/s', $output_html, $m ) ) {
+            return $m[0];
+        }
+    }
+    if ( $show === 'controls' ) {
+        return preg_replace( '/.*?<div id="map">.*?<\\/div>/s', '', $output_html );
+    }
+    return $output_html;
 });
+
