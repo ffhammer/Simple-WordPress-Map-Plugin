@@ -82,7 +82,9 @@ async function parseMarker(data) {
 }
 
 // Map setup
-const map = L.map('map').setView([9.654705892756382, -83.96979657357893], 12);
+const [lat, lng] = CMP.map_center.map(parseFloat);
+const map = L.map('map').setView([lat, lng], CMP.map_zoom);
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
