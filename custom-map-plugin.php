@@ -97,11 +97,11 @@ function cmp_render_settings_page() {
   $saved_tpl   = get_option('cmp_pin_template','');
   $tpl         = trim($saved_tpl) ? $saved_tpl : $default_tpl;
   // **** NEW: Map HTML Structure Defaults/Saved ****
-  $fallback_html_file = plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html';
-  $default_map_html = file_exists($fallback_html_file) ? file_get_contents($fallback_html_file) : '<div id="map"></div>';
+  $default_index_html_file = plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html';
+  $default_map_html = file_exists($default_index_html_file) ? file_get_contents($default_index_html_file) : '<div id="map"></div>';
   $saved_map_html = get_option('cmp_map_html_structure', '');
   $map_html = trim($saved_map_html) ? $saved_map_html : $default_map_html;
-  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/html/filter-label.html';
+  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/html/filter-label-template.html';
   $default_filter_label = file_exists($filter_label_file)
     ? file_get_contents($filter_label_file)
     : '<label><input type="checkbox" class="category-btn" data-category="{category}" checked> <span style="color:{color};">{category}</span></label>';
@@ -231,7 +231,8 @@ jQuery(document).ready(function($){
                rows="6"><?php echo esc_textarea($filter_label_tpl); ?></textarea>
      <p class="description">
        HTML template for individual category filter labels. Use <code>{color}</code> and <code>{category}</code> as placeholders.
-       Default loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/html/filter-label.html'); ?></code>.
+       Default loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/html/filter-label-template
+    .html'); ?></code>.
      </p>
      <p><button type="button" class="button" id="cmp-reset-filter-label">Reset Filter Label to Default</button></p>
 
@@ -266,7 +267,7 @@ add_action('wp_enqueue_scripts', function() {
   wp_enqueue_style('cmp-main-css',plugin_dir_url(__FILE__).'static/css/main.css');
   wp_enqueue_script('extra-markers-js',plugin_dir_url(__FILE__).'static/js/leaflet.extra-markers.min.js',['leaflet-js'],null,true);
   wp_enqueue_script('cmp-main-js',plugin_dir_url(__FILE__).'src/main.js',['leaflet-js'],null,true);
-  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/html/filter-label.html';
+  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/html/filter-label-template.html';
   $default_filter_label = file_exists($filter_label_file) ? file_get_contents($filter_label_file) : '<label><input type="checkbox" class="category-btn" data-category="{category}" checked> <span style="color:{color};">{category}</span></label>';
   $saved_filter_label   = get_option('cmp_filter_label_template', '');
   $filter_label_tpl     = trim($saved_filter_label) ? $saved_filter_label : $default_filter_label;
@@ -290,28 +291,10 @@ add_shortcode('custom_map', function( $atts ) {
     $show        = $atts['show'];
     $saved_map_html = get_option('cmp_map_html_structure', '');
     
-    // Get the fallback HTML structure from file
-    $fallback_html_file = plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html';
-    $fallback_map_html = '';
-    if (file_exists($fallback_html_file)) {
-        $fallback_map_html = file_get_contents($fallback_html_file);
-    } else {
-        // Define a minimal structure if the file is missing
-        $fallback_map_html = '
-    <div class="container">
-    <p style="color:red;">Error: Map fallback HTML file not found at <code>' . esc_html($fallback_html_file) . '</code></p>
-    <div id="filter-controls" style="margin-bottom: 15px;">
-      <p>Filters:</p>
-      <div id="category-filters"><em>Category filters will load here.</em></div>
-      <div style="margin-top:10px">
-        <input type="checkbox" id="filter-all" checked />
-        <label for="filter-all" style="display:inline">Show All</label>
-      </div>
-    </div>
-    <div id="map" style="height: 400px; background: #eee;"><em>Map container</em></div>
-    </div>';
-    }
-    $output_html = trim($saved_map_html) ? $saved_map_html : $fallback_map_html;
+    $default_index_html_file = plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html';
+    $default_index_map_html = $default_index_map_html = file_get_contents($default_index_html_file);
+    
+    $output_html = trim($saved_map_html) ? $saved_map_html : $default_index_map_html;
 
     if ( $show === 'map' ) {
         if ( preg_match( '/<div id="map">.*?<\\/div>/s', $output_html, $m ) ) {
