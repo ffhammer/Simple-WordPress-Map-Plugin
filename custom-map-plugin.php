@@ -74,7 +74,12 @@ add_action('admin_init', function() {
     'type' => 'string',
     // Standard sanitization. Might be too strict for complex structures. Change with caution!
     'sanitize_callback' => 'wp_kses_post'
-]);
+  ]);
+
+  register_setting('cmp_settings_group', 'cmp_controls_html_structure', [
+    'type'              => 'string',
+    'sanitize_callback' => 'wp_kses_post'
+  ]);
 });
 
 // 4) Enqueue admin assets
