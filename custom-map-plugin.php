@@ -96,11 +96,20 @@ function cmp_render_settings_page() {
   $default_tpl = file_exists($tpl_file) ? file_get_contents($tpl_file) : '<b>${marker.title}</b><br>${marker.profile_img_url?`<img src=\"${marker.profile_img_url}\" width=\"200\"><br>`:""}<a href=\"${marker.page_url}\">View</a>';
   $saved_tpl   = get_option('cmp_pin_template','');
   $tpl         = trim($saved_tpl) ? $saved_tpl : $default_tpl;
-  // **** NEW: Map HTML Structure Defaults/Saved ****
-  $default_index_html_file = plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html';
-  $default_map_html = file_exists($default_index_html_file) ? file_get_contents($default_index_html_file) : '<div id="map"></div>';
+  
+  // Map
+  $default_map_html_file = plugin_dir_path(__FILE__) . 'static/html/map-template.html';
+  $default_map_html = file_get_contents($default_map_html_file);
   $saved_map_html = get_option('cmp_map_html_structure', '');
   $map_html = trim($saved_map_html) ? $saved_map_html : $default_map_html;
+
+  //Controls
+  $default_controls_html_file = plugin_dir_path(__FILE__) . 'static/html/controls-template.html';
+  $default_controls_html = file_get_contents($default_controls_html_file);
+  $saved_controls_html = get_option('cmp_controls_html_structure', '');
+  $controls_html = trim($saved_controls_html) ? $saved_controls_html : $default_controls_html;
+
+
   $filter_label_file    = plugin_dir_path(__FILE__) . 'static/html/filter-label-template.html';
   $default_filter_label = file_exists($filter_label_file)
     ? file_get_contents($filter_label_file)
@@ -237,14 +246,25 @@ jQuery(document).ready(function($){
      <p><button type="button" class="button" id="cmp-reset-filter-label">Reset Filter Label to Default</button></p>
 
 
-    <h2>Map Container HTML Structure</h2>
-    <p><strong>Advanced:</strong> Directly edit the HTML structure that wraps the map and filters. <strong style="color:red;">Warning:</strong> Ensure essential element IDs like <code>#map</code> and <code>#category-filters</code> are present in your custom HTML, otherwise the map or filtering may break.</p>
+    <h2>Map HTML Structure</h2>
+    <p><strong>Advanced:</strong> Directly edit the HTML structure that wraps the map.
     <textarea name="cmp_map_html_structure" id="cmp-map-html-structure" class="large-text code" rows="10"><?php echo esc_textarea($map_html); ?></textarea>
-    <p class="description">The default structure is loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html'); ?></code>.</p>
+    <p class="description">The default structure is loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/html/map-template.html'); ?></code>.</p>
     <p><button type="button" class="button" id="cmp-reset-map-html">Reset Map HTML to Default</button></p>
+
+
+
+    <h2>Controls HTML Structure</h2>
+    <p><strong>Advanced:</strong> Directly edit the Map Controls structure.
+    <textarea name="cmp_controls_html_structure" id="cmp-controls-html-structure" class="large-text code" rows="10"><?php echo esc_textarea($controls_html); ?></textarea>
+    <p class="description">The default structure is loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/html/controls-template.html'); ?></code>.</p>
+    <p><button type="button" class="button" id="cmp-reset-controls-html">Reset controls HTML to Default</button></p>
+
+    
+
+
     <?php submit_button(); ?>
   </form>
-    
   <script>
   document.getElementById('cmp-reset-css').onclick = () =>
     document.getElementById('cmp-custom-css').value = <?php echo json_encode($default_css); ?>;
@@ -252,6 +272,11 @@ jQuery(document).ready(function($){
     document.getElementById('cmp-pin-template').value = <?php echo json_encode($default_tpl); ?>;
     document.getElementById('cmp-reset-map-html').onclick = () =>
     document.getElementById('cmp-map-html-structure').value = <?php echo json_encode($default_map_html); ?>;
+
+    document.getElementById('cmp-reset-controls-html').onclick = () =>
+    document.getElementById('cmp-controls-html-structure').value = <?php echo json_encode($default_controls_html); ?>;
+
+
     document.getElementById('cmp-reset-filter-label').onclick = () =>
      document.getElementById('cmp-filter-label-template').value = <?php echo json_encode($default_filter_label); ?>;
   </script>
@@ -285,25 +310,26 @@ add_action('wp_enqueue_scripts', function() {
   $custom_css = get_option('cmp_custom_css','');
   if ($custom_css) wp_add_inline_style('cmp-main-css',$custom_css);
 });
-
 add_shortcode('custom_map', function( $atts ) {
-    $atts        = shortcode_atts( [ 'show' => 'map' ], $atts, 'custom_map' );
-    $show        = $atts['show'];
-    $saved_map_html = get_option('cmp_map_html_structure', '');
-    
-    $default_index_html_file = plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html';
-    $default_index_map_html = $default_index_map_html = file_get_contents($default_index_html_file);
-    
-    $output_html = trim($saved_map_html) ? $saved_map_html : $default_index_map_html;
+  $atts        = shortcode_atts( [ 'show' => 'map' ], $atts, 'custom_map' );
+  $show        = $atts['show'];
+  $saved_map_html = trim(get_option('cmp_map_html_structure', ''));
+  $default_map_file = plugin_dir_path(__FILE__) . 'static/html/map-template.html';
+  $default_map_html = file_get_contents($default_map_file);
+  
+  $saved_map_html = trim($saved_map_html) ? $saved_map_html : $default_map_html;
 
-    if ( $show === 'map' ) {
-        if ( preg_match( '/<div id="map">.*?<\\/div>/s', $output_html, $m ) ) {
-            return $m[0];
-        }
-    }
-    if ( $show === 'controls' ) {
-        return preg_replace( '/.*?<div id="map">.*?<\\/div>/s', '', $output_html );
-    }
-    return $output_html;
+  $saved_controls_html = get_option('cmp_controls_html_structure', '');
+  $default_controls_file = plugin_dir_path(__FILE__) . 'static/html/controls-template.html';
+  $default_controls_html = file_get_contents($default_controls_file);
+  
+  $saved_controls_html = trim($saved_controls_html) ? $saved_controls_html : $default_controls_html;
+
+  if ( $show === 'map' ) {
+    return $saved_map_html;
+  }
+  if ( $show === 'controls' ) {
+    return $saved_controls_html;
+  }
+  return '<p>Wrong custom_map show= Option: ' . esc_html($show) . ' must be "map" or "controls".</p>';
 });
-
