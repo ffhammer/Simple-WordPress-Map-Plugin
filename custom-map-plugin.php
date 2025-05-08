@@ -148,7 +148,7 @@ function cmp_render_settings_page()
 
         <h3>Key Features:</h3>
         <ul>
-          <li><strong>Shortcode:</strong> Use <code>[custom_map]</code> to embed the map anywhere.</li>
+          <li><strong>Shortcode:</strong> Use <code>[custom_map show="controls"] and [custom_map show="map"]</code> to embed the map and control mennu anywhere.</li>
             <li><strong>Starting Map Position and Zoom Level:</strong> Configure the initial latitude, longitude, and zoom level for the map display.</li>
           <li><strong>Post Type:</strong> Select which post type to display (default is <code>producer</code>).</li>
           <li><strong>ACF Field Mapping:</strong> Configure which ACF fields provide latitude, longitude, image, and category data.</li>
