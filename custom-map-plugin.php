@@ -92,16 +92,16 @@ function cmp_render_settings_page() {
   $default_css = file_exists($css_file) ? file_get_contents($css_file) : '';
   $saved_css   = get_option('cmp_custom_css','');
   $css         = trim($saved_css) ? $saved_css : $default_css;
-  $tpl_file    = plugin_dir_path(__FILE__).'static/pin-template.html';
+  $tpl_file    = plugin_dir_path(__FILE__).'static/html/pin-template.html';
   $default_tpl = file_exists($tpl_file) ? file_get_contents($tpl_file) : '<b>${marker.title}</b><br>${marker.profile_img_url?`<img src=\"${marker.profile_img_url}\" width=\"200\"><br>`:""}<a href=\"${marker.page_url}\">View</a>';
   $saved_tpl   = get_option('cmp_pin_template','');
   $tpl         = trim($saved_tpl) ? $saved_tpl : $default_tpl;
   // **** NEW: Map HTML Structure Defaults/Saved ****
-  $fallback_html_file = plugin_dir_path(__FILE__) . 'static/fall_back_index.html';
+  $fallback_html_file = plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html';
   $default_map_html = file_exists($fallback_html_file) ? file_get_contents($fallback_html_file) : '<div id="map"></div>';
   $saved_map_html = get_option('cmp_map_html_structure', '');
   $map_html = trim($saved_map_html) ? $saved_map_html : $default_map_html;
-  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/filter-label.html';
+  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/html/filter-label.html';
   $default_filter_label = file_exists($filter_label_file)
     ? file_get_contents($filter_label_file)
     : '<label><input type="checkbox" class="category-btn" data-category="{category}" checked> <span style="color:{color};">{category}</span></label>';
@@ -231,7 +231,7 @@ jQuery(document).ready(function($){
                rows="6"><?php echo esc_textarea($filter_label_tpl); ?></textarea>
      <p class="description">
        HTML template for individual category filter labels. Use <code>{color}</code> and <code>{category}</code> as placeholders.
-       Default loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/filter-label.html'); ?></code>.
+       Default loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/html/filter-label.html'); ?></code>.
      </p>
      <p><button type="button" class="button" id="cmp-reset-filter-label">Reset Filter Label to Default</button></p>
 
@@ -239,7 +239,7 @@ jQuery(document).ready(function($){
     <h2>Map Container HTML Structure</h2>
     <p><strong>Advanced:</strong> Directly edit the HTML structure that wraps the map and filters. <strong style="color:red;">Warning:</strong> Ensure essential element IDs like <code>#map</code> and <code>#category-filters</code> are present in your custom HTML, otherwise the map or filtering may break.</p>
     <textarea name="cmp_map_html_structure" id="cmp-map-html-structure" class="large-text code" rows="10"><?php echo esc_textarea($map_html); ?></textarea>
-    <p class="description">The default structure is loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/fall_back_index.html'); ?></code>.</p>
+    <p class="description">The default structure is loaded from <code><?php echo esc_html(plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html'); ?></code>.</p>
     <p><button type="button" class="button" id="cmp-reset-map-html">Reset Map HTML to Default</button></p>
     <?php submit_button(); ?>
   </form>
@@ -266,7 +266,7 @@ add_action('wp_enqueue_scripts', function() {
   wp_enqueue_style('cmp-main-css',plugin_dir_url(__FILE__).'static/css/main.css');
   wp_enqueue_script('extra-markers-js',plugin_dir_url(__FILE__).'static/js/leaflet.extra-markers.min.js',['leaflet-js'],null,true);
   wp_enqueue_script('cmp-main-js',plugin_dir_url(__FILE__).'src/main.js',['leaflet-js'],null,true);
-  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/filter-label.html';
+  $filter_label_file    = plugin_dir_path(__FILE__) . 'static/html/filter-label.html';
   $default_filter_label = file_exists($filter_label_file) ? file_get_contents($filter_label_file) : '<label><input type="checkbox" class="category-btn" data-category="{category}" checked> <span style="color:{color};">{category}</span></label>';
   $saved_filter_label   = get_option('cmp_filter_label_template', '');
   $filter_label_tpl     = trim($saved_filter_label) ? $saved_filter_label : $default_filter_label;
@@ -291,7 +291,7 @@ add_shortcode('custom_map', function( $atts ) {
     $saved_map_html = get_option('cmp_map_html_structure', '');
     
     // Get the fallback HTML structure from file
-    $fallback_html_file = plugin_dir_path(__FILE__) . 'static/fall_back_index.html';
+    $fallback_html_file = plugin_dir_path(__FILE__) . 'static/html/fall_back_index.html';
     $fallback_map_html = '';
     if (file_exists($fallback_html_file)) {
         $fallback_map_html = file_get_contents($fallback_html_file);
